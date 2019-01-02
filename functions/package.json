@@ -1,0 +1,21 @@
+{
+  "name": "medbot",
+  "description": "Medicine Reminder Bot",
+  "scripts": {
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "setenv": "firebase functions:config:set",
+    "getenv": "firebase functions:config:get",
+    "test": "./node_modules/.bin/ava -c 1 -s ./test.js"
+  },
+  "dependencies": {
+    "actions-on-google": "^2.5.0",
+    "actions-on-google-testing": "^0.2.4",
+    "chai": "^4.2.0",
+    "firebase-admin": "~6.0.0",
+    "firebase-functions": "^2.1.0"
+  },
+  "private": true
+}
