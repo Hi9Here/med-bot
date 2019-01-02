@@ -1,14 +1,15 @@
 'use strict'
 
 const functions = require('firebase-functions');
+// Add more packages as you need them
 const {
   dialogflow
 } = require('actions-on-google');
-
 const admin = require('firebase-admin');
 
 admin.initializeApp();
 
+// Setup some variables for the paths to Firestore Database
 const auth = admin.auth();
 const db = admin.firestore();
 const dbuser = {
@@ -25,9 +26,8 @@ const datetimeString = datetime.toString()
 
 console.log(`deploy V${version} on ${datetimeString}`)
 
-// Create 
+// Create a Firebase Environmental Variable yarn envset
 const app = dialogflow({
-  // TODO Change this to process.env
   clientId: functions.config().fireconfig.id,
   debug: true,
 });

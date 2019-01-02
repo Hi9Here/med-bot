@@ -10,6 +10,7 @@
     "getenv": "firebase functions:config:get",
     "test": "./node_modules/.bin/ava -c 1 -s ./test.js"
   },
+  "engines": { "node": "8" },
   "dependencies": {
     "actions-on-google": "^2.5.0",
     "actions-on-google-testing": "^0.2.4",
