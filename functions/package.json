@@ -10,13 +10,16 @@
     "getenv": "firebase functions:config:get",
     "test": "./node_modules/.bin/ava -c 1 -s ./test.js"
   },
-  "engines": { "node": "8" },
+  "engines": {
+    "node": "8"
+  },
   "dependencies": {
     "actions-on-google": "^2.5.0",
     "actions-on-google-testing": "^0.2.4",
     "chai": "^4.2.0",
-    "firebase-admin": "~6.0.0",
-    "firebase-functions": "^2.1.0"
+    "firebase-admin": "~6.4.0",
+    "firebase-functions": "^2.1.0",
+    "moment": "^2.23.0"
   },
   "private": true
 }
