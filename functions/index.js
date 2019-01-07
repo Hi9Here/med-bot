@@ -115,6 +115,14 @@ app.intent("Get Sign In", (conv, params, signin) => {
 });
 // End Get Sign In
 
+// Setup
+
+
+
+
+
+// End Setup
+
 // List Users
 // TODO Needs to be minimum 2 and the user asking must be an Admin
 app.intent('List Users', (conv) => {
