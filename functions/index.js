@@ -24,7 +24,7 @@ const db = admin.firestore();
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.35;
+const version = 0.395;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -36,12 +36,12 @@ const app = dialogflow({
   debug: true,
 });
 
-
 //Middleware get's fired everytime before intents
 app.middleware(async(conv) => {
   const { payload } = conv.user.profile
     // Get the email value from the Conversation User
   const { email } = conv.user;
+  conv.data.name = payload.FullName
   console.info(`*  middleware  * conv.user ${JSON.stringify(conv.user, null, 2)}`);
   console.info(`*  middleware  * conv.data.uid ${JSON.stringify(conv.data.uid, null, 2)}`);
   console.info(`*  middleware  * email const ${JSON.stringify(email, null, 2)}`);
@@ -71,7 +71,8 @@ app.middleware(async(conv) => {
         ProfileImage: payload.picture,
         ProfileCreated: payload.iat,
         ProfileExpires: payload.exp,
-        GoogleID: payload.sub
+        GoogleID: payload.sub,
+        Taken: payload.iat
       });
     } catch (error) {
       throw console.error(`*  middleware  * error trying to save payload data ${error}`);
@@ -119,12 +120,12 @@ app.intent("Get Sign In", (conv, params, signin) => {
 // Taken Medicine
 app.intent('Taken Medicine', async (conv) => {
   console.info(`*  Taken Medicine  * Fired`);
-  console.info(`*  Taken Medicine  * signin.status is ${JSON.stringify(conv.user, null, 2)}`);
+  console.info(`*  Taken Medicine  * Conv User is ${JSON.stringify(conv.user, null, 2)}`);
   console.info(`*  Taken Medicine  * conv.data.uid is ${JSON.stringify(conv.data.uid, null, 2)}`);
-  conv.ask(new SimpleResponse(`Thank you ${conv.user}`))
+  conv.ask(new SimpleResponse(`Thank you ${conv.data.name}`))
   if (conv.user) {
     console.info(`*  Taken Medicine  * conv.user is present`);
-    await db.collection(`user`).doc(conv.data.uid).set({Taken: datetime});
+    await db.collection(`user`).doc(conv.data.uid).update({Taken: datetime});
     console.info(`*  Taken Medicine  * taken time and date is ${JSON.stringify(datetime, null, 2)}`);
     return;
   } else {
