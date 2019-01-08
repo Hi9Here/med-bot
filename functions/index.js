@@ -24,7 +24,7 @@ const db = admin.firestore();
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.261;
+const version = 0.322;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -76,7 +76,7 @@ app.middleware(async(conv) => {
     } catch (error) {
       throw console.error(`* middleware * error trying to save payload data ${error}`);
     }
-    console.info(`* Middleware Payload Saved ${JSON.stringify(conv.user.profile.payload, null, 2)}`);
+    console.info(`* middleware * User Payload Saved ${JSON.stringify(conv.user.profile.payload, null, 2)}`);
   }
 });
 // End of Middleware
@@ -85,7 +85,7 @@ app.middleware(async(conv) => {
 app.intent('Default Welcome Intent', (conv) => {
   console.info(`* Default Welcome Intent * V${version} Fired`);
   conv.ask(new SimpleResponse(`Version ${version} welcome`))
-  conv.ask(new Suggestions([`Open Account`, 'More Info']));
+  conv.ask(new Suggestions([`Open Account`, `Taken Medicine`,'More Info']));
   return
 });
 // End Default Welcome Intent
@@ -109,7 +109,7 @@ app.intent("Get Sign In", (conv, params, signin) => {
     console.info(`* Get Sign In * Sign-in Done Fired`);
     return
   } else {
-    conv.ask("You need to sign in to use me.");
+    conv.ask("Get Sign In: You need to sign in to use me.");
     console.info(`* Get Sign In * You need to sign in to use me fired`);
     return
   }
@@ -117,21 +117,20 @@ app.intent("Get Sign In", (conv, params, signin) => {
 // End Get Sign In
 
 // Taken Medicine
-app.intent('Taken Medicine', (conv, params, signin) => {
+app.intent('Taken Medicine', async (conv, params, signin) => {
+  console.info(`* Taken Medicine * Fired`);
   console.info(`* Taken Medicine * signin.status is ${JSON.stringify(signin.status, null, 2)}`);
+  console.info(`* Taken Medicine * conv.data.uid is ${JSON.stringify(conv.data.uid, null, 2)}`);
   conv.ask(new SimpleResponse(`Thank you`))
   if (signin.status === "OK") {
-    console.info(`* Taken Medicine * Fired`);
-    return db.collection(`user`).doc(conv.data.uid).set({
+    console.info(`* Taken Medicine * Sign In Status OK Fired`);
+    await db.collection(`user`).doc(conv.data.uid).set({
       Taken: datetime
-    })
-    .then (() => {
-      console.info(`* Taken Medicine * taken time and date is ${JSON.stringify(datetime, null, 2)}`);
-      return
-    })
+    });
+    console.info(`* Taken Medicine * taken time and date is ${JSON.stringify(datetime, null, 2)}`);
+    return;
   } else {
-    conv.ask("You need to sign in to use me.");
-    console.info(`* Taken Medicine * conv.data.uid is ${JSON.stringify(conv.data.uid, null, 2)}`);
+    conv.ask("Taken Medicine: You need to sign in to use me.");
     console.info(`* Taken Medicine * You need to sign in to use me fired`);
     return
   }
