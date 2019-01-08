@@ -24,7 +24,7 @@ const db = admin.firestore();
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.395;
+const version = 0.396;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -41,7 +41,6 @@ app.middleware(async(conv) => {
   const { payload } = conv.user.profile
     // Get the email value from the Conversation User
   const { email } = conv.user;
-  conv.data.name = payload.FullName
   console.info(`*  middleware  * conv.user ${JSON.stringify(conv.user, null, 2)}`);
   console.info(`*  middleware  * conv.data.uid ${JSON.stringify(conv.data.uid, null, 2)}`);
   console.info(`*  middleware  * email const ${JSON.stringify(email, null, 2)}`);
@@ -74,6 +73,7 @@ app.middleware(async(conv) => {
         GoogleID: payload.sub,
         Taken: payload.iat
       });
+      conv.data.name = payload.FullName
     } catch (error) {
       throw console.error(`*  middleware  * error trying to save payload data ${error}`);
     }
