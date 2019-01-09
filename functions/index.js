@@ -24,7 +24,7 @@ const db = admin.firestore();
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.42;
+const version = 0.4;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -70,9 +70,9 @@ app.middleware(async(conv) => {
         ProfileImage: payload.picture,
         ProfileCreated: payload.iat,
         ProfileExpires: payload.exp,
-        GoogleID: payload.sub,
-        Taken: //TODO
+        GoogleID: payload.sub
       });
+      conv.data.name = payload.FullName
     } catch (error) {
       throw console.error(`*  middleware  * error trying to save payload data ${error}`);
     }
@@ -116,29 +116,29 @@ app.intent("Get Sign In", (conv, params, signin) => {
 });
 // End Get Sign In
 
-// Taken Medicine
-app.intent('Taken Medicine', async(conv) => {
-    console.info(`*  Taken Medicine  * Fired`);
-    console.info(`*  Taken Medicine  * Conv User is ${JSON.stringify(conv.user, null, 2)}`);
-    console.info(`*  Taken Medicine  * conv.data.uid is ${JSON.stringify(conv.data.uid)}`);
-    conv.ask(new SimpleResponse(`Thank you ${conv.user.profile.payload.given_name}`))
-    if (conv.user) {
-      console.info(`*  Taken Medicine  * conv.user is present`);
-      try {
-        db.collection(`user`).doc(conv.data.uid).update({
-          // TODO
-        });
-      } catch (error) {
-        throw console.error(`*  Taken Medicine  * error trying to update Taken: datetime ${error}`);
-      }
-      console.info(`*  Taken Medicine  * taken time and date is ${JSON.stringify(datetime)}`);
-      return;
-    }
+// Taken
+app.intent('Taken Medicine', async (conv, { taken }) => {
+  console.info(`*  Taken Medicine  * Fired`);
+  console.info(`*  Taken Medicine  * Conv User is ${JSON.stringify(conv.user, null, 2)}`);
+  console.info(`*  Taken Medicine  * conv.data.uid is ${JSON.stringify(conv.data.uid, null, 2)}`);
+  conv.ask(new SimpleResponse(`Thank you ${conv.data.name}`))
+  if (conv.user) {
+    console.info(`*  Taken Medicine  * conv.user is present`);
+    await db.collection(`entities`).doc().set({
+      uid: conv.data.uid,
+      entity: taken,
+      timeDate: serverTimestamp()
+    });
+    console.info(`*  Taken Medicine  * taken time and date is ${JSON.stringify(datetime, null, 2)}`);
+    return;
+  } else {
     conv.ask("Taken Medicine: You need to Open Account to use me.");
     console.info(`*  Taken Medicine  * You need to sign in to use me fired`);
     return
-  })
-  // End Taken Medicine
+  }
+
+})
+// End Taken
 
 // List Users
 // TODO Needs to be minimum 2 and the user asking must be an Admin
