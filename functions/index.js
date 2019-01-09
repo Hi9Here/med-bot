@@ -19,12 +19,13 @@ admin.initializeApp();
 // Setup some variables for the paths to Firestore Database
 const auth = admin.auth();
 const db = admin.firestore();
+let FieldValue = require('firebase-admin').firestore.FieldValue;
 
 // Just something to stop annoying error messages, ignore
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.4;
+const version = 0.44;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -118,27 +119,70 @@ app.intent("Get Sign In", (conv, params, signin) => {
 
 // Taken
 app.intent('Taken Medicine', async (conv, { taken }) => {
+  let whattaken = taken
   console.info(`*  Taken Medicine  * Fired`);
   console.info(`*  Taken Medicine  * Conv User is ${JSON.stringify(conv.user, null, 2)}`);
   console.info(`*  Taken Medicine  * conv.data.uid is ${JSON.stringify(conv.data.uid, null, 2)}`);
-  conv.ask(new SimpleResponse(`Thank you ${conv.data.name}`))
+  console.info(`*  Taken Medicine  * medicine taken is ${JSON.stringify(taken)}`);
+  conv.ask(new SimpleResponse(`Thank you ${conv.user.profile.payload.given_name}`))
   if (conv.user) {
     console.info(`*  Taken Medicine  * conv.user is present`);
-    await db.collection(`entities`).doc().set({
+    try {
+      return db.collection(`entities`).doc().set({
       uid: conv.data.uid,
-      entity: taken,
-      timeDate: serverTimestamp()
-    });
+      entity: whattaken,
+      timestamp: FieldValue.serverTimestamp()
+      });
+    }  catch (error) {
+      throw console.error(`*  Taken  * error trying to save payload data ${error}`);
+    }
     console.info(`*  Taken Medicine  * taken time and date is ${JSON.stringify(datetime, null, 2)}`);
     return;
-  } else {
+  }
     conv.ask("Taken Medicine: You need to Open Account to use me.");
     console.info(`*  Taken Medicine  * You need to sign in to use me fired`);
     return
-  }
-
 })
 // End Taken
+
+// List Medications
+// TODO Needs to be minimum 2 and the user asking must be an Admin
+app.intent('List Meds', (conv) => {
+    var listmeds = {}
+    console.info(`*  List Meds Fired *`);
+    conv.ask(new SimpleResponse({
+      speech: `Here is the List`,
+      text: `This is the List`
+    }));
+    return db.collection('user').get()
+      .then(snapshot => {
+        if (snapshot.empty) {
+          console.warn(`*  List Meds  * No matching list items`);
+          return;
+        }
+        snapshot.docs
+          .map(doc => doc.data())
+          .forEach(element => {
+            listmeds[element.Email] = {
+              title: element.Email,
+              description: `${element.LastName} ${element.Email} `,
+              image: new Image({
+                url: element.ProfileImage,
+                alt: element.FullName
+              })
+            }
+          })
+        conv.ask(new List({
+          title: 'User List',
+          items: listmeds
+        }));
+        console.info(`*  List Meds  * listmeds is ${JSON.stringify(listmeds, null, 2)}`)
+      })
+      .catch(error => {
+        console.error(`*  List Meds  * Error getting list of users under ${error}`);
+      });
+  })
+  // End List Medications
 
 // List Users
 // TODO Needs to be minimum 2 and the user asking must be an Admin
