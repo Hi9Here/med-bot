@@ -25,7 +25,7 @@ let FieldValue = require('firebase-admin').firestore.FieldValue;
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.44;
+const version = 0.57;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -85,8 +85,8 @@ app.middleware(async(conv) => {
 // Default Welcome Intent
 app.intent('Default Welcome Intent', (conv) => {
   console.info(`**          Default Welcome Intent          ** V${version} Fired`);
-  conv.ask(new SimpleResponse(`Version ${version} welcome`))
-  conv.ask(new Suggestions([`Open Account`, `Taken Medicine`, `Have I Taken`, 'More Info']));
+  // conv.ask(new SimpleResponse(`Version ${version} welcome`))
+  // conv.ask(new Suggestions([`Open Account`, `Taken Medicine`, `List Meds`, `List Users`, 'More Info']));
   return
 });
 // End Default Welcome Intent
@@ -120,24 +120,36 @@ app.intent("Get Sign In", (conv, params, signin) => {
 // Taken
 app.intent('Taken Medicine', async (conv, { taken }) => {
   let whattaken = taken
+  let medImage
   console.info(`*  Taken Medicine  * Fired`);
   console.info(`*  Taken Medicine  * Conv User is ${JSON.stringify(conv.user, null, 2)}`);
   console.info(`*  Taken Medicine  * conv.data.uid is ${JSON.stringify(conv.data.uid, null, 2)}`);
   console.info(`*  Taken Medicine  * medicine taken is ${JSON.stringify(taken)}`);
   conv.ask(new SimpleResponse(`Thank you ${conv.user.profile.payload.given_name}`))
+  // TODO change to entity in the url to chose the image
   if (conv.user) {
     console.info(`*  Taken Medicine  * conv.user is present`);
+    switch (whattaken) {
+      case `supplement`:
+        medImage = `https://storage.googleapis.com/med-bot-one.appspot.com/medication-images/Use-Supplements.jpg`
+        break;
+      case `medication`:
+        medImage = `https://storage.googleapis.com/med-bot-one.appspot.com/medication-images/Use-Medecine.jpg`
+        break;
+      case `inhaler`:
+        medImage = `https://storage.googleapis.com/med-bot-one.appspot.com/medication-images/Use-Inhaler.jpg`
+        break;
+    };
     try {
       return db.collection(`entities`).doc().set({
       uid: conv.data.uid,
+      medImage: medImage,
       entity: whattaken,
       timestamp: FieldValue.serverTimestamp()
       });
     }  catch (error) {
       throw console.error(`*  Taken  * error trying to save payload data ${error}`);
     }
-    console.info(`*  Taken Medicine  * taken time and date is ${JSON.stringify(datetime, null, 2)}`);
-    return;
   }
     conv.ask("Taken Medicine: You need to Open Account to use me.");
     console.info(`*  Taken Medicine  * You need to sign in to use me fired`);
@@ -148,38 +160,38 @@ app.intent('Taken Medicine', async (conv, { taken }) => {
 // List Medications
 // TODO Needs to be minimum 2 and the user asking must be an Admin
 app.intent('List Meds', (conv) => {
-    var listmeds = {}
+    let listmeds = {}
     console.info(`*  List Meds Fired *`);
     conv.ask(new SimpleResponse({
-      speech: `Here is the List`,
-      text: `This is the List`
+      speech: `Here is the List of Meds`,
+      text: `This is the List of Meds`
     }));
-    return db.collection('user').get()
+    return db.collection('entities').where(`uid`, `==`, conv.data.uid).get()
       .then(snapshot => {
         if (snapshot.empty) {
-          console.warn(`*  List Meds  * No matching list items`);
+          console.warn(`*  List Meds  * No matching list meds`);
           return;
         }
         snapshot.docs
           .map(doc => doc.data())
-          .forEach(element => {
-            listmeds[element.Email] = {
-              title: element.Email,
-              description: `${element.LastName} ${element.Email} `,
+          .forEach(medelement => {
+            listmeds[medelement.entity] = {
+              title: medelement.entity,
+              description: `${medelement.entity} `,
               image: new Image({
-                url: element.ProfileImage,
-                alt: element.FullName
+                url: medelement.medImage,
+                alt: medelement.timestamp
               })
             }
           })
         conv.ask(new List({
-          title: 'User List',
+          title: 'Med List',
           items: listmeds
         }));
         console.info(`*  List Meds  * listmeds is ${JSON.stringify(listmeds, null, 2)}`)
       })
       .catch(error => {
-        console.error(`*  List Meds  * Error getting list of users under ${error}`);
+        console.error(`*  List Meds  * Error getting list of meds under ${error}`);
       });
   })
   // End List Medications
