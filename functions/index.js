@@ -71,7 +71,7 @@ app.middleware(async(conv) => {
         ProfileCreated: payload.iat,
         ProfileExpires: payload.exp,
         GoogleID: payload.sub,
-        Taken: serverTimestamp()
+        Taken: //TODO
       });
     } catch (error) {
       throw console.error(`*  middleware  * error trying to save payload data ${error}`);
@@ -126,7 +126,7 @@ app.intent('Taken Medicine', async(conv) => {
       console.info(`*  Taken Medicine  * conv.user is present`);
       try {
         db.collection(`user`).doc(conv.data.uid).update({
-          Taken: FieldValue.arrayUnion(serverTimestamp())
+          // TODO
         });
       } catch (error) {
         throw console.error(`*  Taken Medicine  * error trying to update Taken: datetime ${error}`);
