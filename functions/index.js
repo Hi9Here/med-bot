@@ -25,7 +25,7 @@ let FieldValue = require('firebase-admin').firestore.FieldValue;
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.7;
+const version = 0.71;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -180,7 +180,7 @@ app.intent('Diary', (conv) => {
               description: `${medelement.entity} `,
               image: new Image({
                 url: medelement.medImage,
-                alt: medelement.entity
+                alt: medelement.moment(timestamp).format('MMMM Do YYYY, h:mm:ss a')
               })
             }
           })
