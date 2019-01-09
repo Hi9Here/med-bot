@@ -25,7 +25,7 @@ let FieldValue = require('firebase-admin').firestore.FieldValue;
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.57;
+const version = 0.7;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -82,14 +82,14 @@ app.middleware(async(conv) => {
 });
 // End of Middleware
 
-// Default Welcome Intent
-app.intent('Default Welcome Intent', (conv) => {
-  console.info(`**          Default Welcome Intent          ** V${version} Fired`);
-  // conv.ask(new SimpleResponse(`Version ${version} welcome`))
-  // conv.ask(new Suggestions([`Open Account`, `Taken Medicine`, `List Meds`, `List Users`, 'More Info']));
-  return
-});
-// End Default Welcome Intent
+// // Default Welcome Intent
+// app.intent('Default Welcome Intent', (conv) => {
+//   console.info(`**          Default Welcome Intent          ** V${version} Fired`);
+//   conv.ask(new SimpleResponse(`Version ${version} welcome`))
+//   conv.ask(new Suggestions([`Taken Medicine`, `List Meds`, `List Users`, 'More Info']));
+//   return
+// });
+// // End Default Welcome Intent
 
 // Sign In
 app.intent("Start Sign-in", conv => {
@@ -99,23 +99,23 @@ app.intent("Start Sign-in", conv => {
 // End Sign In
 
 // Get Sign In
-app.intent("Get Sign In", (conv, params, signin) => {
+app.intent("Open Account", (conv, params, signin) => {
   const { payload } = conv.user.profile
-  console.info(`*  Get Sign In  * Fired`);
-  console.info(`*  Get Sign In  * signin.status is ${JSON.stringify(signin.status, null, 2)}`);
-  console.info(`*  Get Sign In  * payload const is ${JSON.stringify(payload, null, 2)}`);
+  console.info(`*  Open Account  * Fired`);
+  console.info(`*  Open Account  * signin.status is ${JSON.stringify(signin.status, null, 2)}`);
+  console.info(`*  Open Account  * payload const is ${JSON.stringify(payload, null, 2)}`);
   if (signin.status === "OK") {
     conv.ask("Sign-in Done.");
     conv.ask(new Suggestions([`Setup`]))
-    console.info(`*  Get Sign In  * Sign-in Done Fired`);
+    console.info(`*  Open Account  * Sign-in Done Fired`);
     return
   } else {
-    conv.ask("Get Sign In: You need to sign in to use me.");
-    console.info(`*  Get Sign In  * You need to sign in to use me fired`);
+    conv.ask("Open Account: You need to sign in to use me.");
+    console.info(`*  Open Account  * You need to sign in to use me fired`);
     return
   }
 });
-// End Get Sign In
+// End Open Account
 
 // Taken
 app.intent('Taken Medicine', async (conv, { taken }) => {
@@ -159,9 +159,9 @@ app.intent('Taken Medicine', async (conv, { taken }) => {
 
 // List Medications
 // TODO Needs to be minimum 2 and the user asking must be an Admin
-app.intent('List Meds', (conv) => {
-    let listmeds = {}
-    console.info(`*  List Meds Fired *`);
+app.intent('Diary', (conv) => {
+    let diary = {}
+    console.info(`*  Diary Fired *`);
     conv.ask(new SimpleResponse({
       speech: `Here is the List of Meds`,
       text: `This is the List of Meds`
@@ -169,29 +169,29 @@ app.intent('List Meds', (conv) => {
     return db.collection('entities').where(`uid`, `==`, conv.data.uid).get()
       .then(snapshot => {
         if (snapshot.empty) {
-          console.warn(`*  List Meds  * No matching list meds`);
+          console.warn(`*  Diary  * No matching Diary`);
           return;
         }
         snapshot.docs
           .map(doc => doc.data())
           .forEach(medelement => {
-            listmeds[medelement.entity] = {
+            diary[medelement.entity] = {
               title: medelement.entity,
               description: `${medelement.entity} `,
               image: new Image({
                 url: medelement.medImage,
-                alt: medelement.timestamp
+                alt: medelement.entity
               })
             }
           })
         conv.ask(new List({
           title: 'Med List',
-          items: listmeds
+          items: diary
         }));
-        console.info(`*  List Meds  * listmeds is ${JSON.stringify(listmeds, null, 2)}`)
+        console.info(`*  Diary  * diary is ${JSON.stringify(diary, null, 2)}`)
       })
       .catch(error => {
-        console.error(`*  List Meds  * Error getting list of meds under ${error}`);
+        console.error(`*  Diary  * Error getting diary under ${error}`);
       });
   })
   // End List Medications
