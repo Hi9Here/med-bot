@@ -25,7 +25,7 @@ let FieldValue = require('firebase-admin').firestore.FieldValue;
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.72;
+const version = 0.821;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -160,40 +160,40 @@ app.intent('Taken Medicine', async (conv, { taken }) => {
 
 // List Medications
 // TODO Needs to be minimum 2 and the user asking must be an Admin
-app.intent('Diary', (conv) => {
+app.intent('Diary', async (conv) => {
     let diary = {}
     console.info(`*  Diary Fired *`);
     conv.ask(new SimpleResponse({
       speech: `Here is the List of Meds`,
       text: `This is the List of Meds`
     }));
-    return db.collection('entities').where(`uid`, `==`, conv.data.uid).orderBy(timestamp).limit(30).get()
-      .then(snapshot => {
-        if (snapshot.empty) {
-          console.warn(`*  Diary  * No matching Diary`);
-          return;
-        }
-        snapshot.docs
-          .map(doc => doc.data())
-          .forEach(medelement => {
-            diary[medelement.entity] = {
-              title: medelement.entity,
-              description: `${medelement.entity} `,
-              image: new Image({
-                url: medelement.medImage,
-                alt: `${medelement}.${moment(timestamp).format('MMMM Do YYYY, h:mm:ss a')}`
-              })
-            }
+    try {
+    const snapshot = await db.collection('entities').where(`uid`, `==`, conv.data.uid).get();
+    if (snapshot.empty) {
+      console.warn(`*  Diary  * No matching Diary`);
+      return;
+    }
+    snapshot.docs
+      .map(doc => doc.data())
+      .forEach(medelement => {
+        diary[`${JSON.stringify(medelement.timestamp, null, 2)}`] = {
+          title: `${JSON.stringify(medelement.timestamp, null, 2)}`,
+          description: `${medelement.entity} `,
+          image: new Image({
+            url: medelement.medImage,
+            alt: medelement.entity
           })
-        conv.ask(new List({
-          title: 'Med List',
-          items: diary
-        }));
-        console.info(`*  Diary  * diary is ${JSON.stringify(diary, null, 2)}`)
-      })
-      .catch(error => {
-        console.error(`*  Diary  * Error getting diary under ${error}`);
+        };
       });
+    conv.ask(new List({
+      title: 'Med List',
+      items: diary
+    }));
+    console.info(`*  Diary  * diary is ${JSON.stringify(diary, null, 2)}`);
+  }
+  catch (error) {
+    console.error(`*  Diary  * Error getting diary under ${error}`);
+  }
   })
   // End List Medications
 
