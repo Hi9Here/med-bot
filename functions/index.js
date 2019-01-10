@@ -25,7 +25,7 @@ let FieldValue = require('firebase-admin').firestore.FieldValue;
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.71;
+const version = 0.72;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -42,6 +42,7 @@ app.middleware(async(conv) => {
   const { payload } = conv.user.profile
     // Get the email value from the Conversation User
   const { email } = conv.user;
+  console.info(`*  middleware  * VERSION ${version}`);
   console.info(`*  middleware  * conv.user ${JSON.stringify(conv.user, null, 2)}`);
   console.info(`*  middleware  * conv.data.uid ${JSON.stringify(conv.data.uid, null, 2)}`);
   console.info(`*  middleware  * email const ${JSON.stringify(email, null, 2)}`);
@@ -166,7 +167,7 @@ app.intent('Diary', (conv) => {
       speech: `Here is the List of Meds`,
       text: `This is the List of Meds`
     }));
-    return db.collection('entities').where(`uid`, `==`, conv.data.uid).get()
+    return db.collection('entities').where(`uid`, `==`, conv.data.uid).orderBy(timestamp).limit(30).get()
       .then(snapshot => {
         if (snapshot.empty) {
           console.warn(`*  Diary  * No matching Diary`);
@@ -180,7 +181,7 @@ app.intent('Diary', (conv) => {
               description: `${medelement.entity} `,
               image: new Image({
                 url: medelement.medImage,
-                alt: medelement.moment(timestamp).format('MMMM Do YYYY, h:mm:ss a')
+                alt: `${medelement}.${moment(timestamp).format('MMMM Do YYYY, h:mm:ss a')}`
               })
             }
           })
