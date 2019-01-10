@@ -25,7 +25,7 @@ let FieldValue = require('firebase-admin').firestore.FieldValue;
 db.settings({ timestampsInSnapshots: true });
 
 // Version and logging
-const version = 0.821;
+const version = 0.826;
 
 const datetime = Date.now();
 const when = moment(datetime).format('MMMM Do YYYY, h:mm:ss a');
@@ -176,9 +176,10 @@ app.intent('Diary', async (conv) => {
     snapshot.docs
       .map(doc => doc.data())
       .forEach(medelement => {
-        diary[`${JSON.stringify(medelement.timestamp, null, 2)}`] = {
-          title: `${JSON.stringify(medelement.timestamp, null, 2)}`,
-          description: `${medelement.entity} `,
+        moment('2015-12-10 13:55:02').fromNow()
+        diary[`${moment(medelement.timestamp.toDate()).calendar()}`] = {
+          title: `${moment(medelement.timestamp.toDate()).calendar()}`,
+          description: medelement.entity,
           image: new Image({
             url: medelement.medImage,
             alt: medelement.entity
